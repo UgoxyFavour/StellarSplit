@@ -6,28 +6,23 @@ function App() {
   const announceRef = useRef<HTMLDivElement>(null);
 
   // Function to announce messages to screen readers
-  const announce = (message: string) => {
-    if (announceRef.current) {
-      announceRef.current.textContent = message;
-    }
-  };
 
   useEffect(() => {
     registerServiceWorker();
-  }, [])
-  
+  }, []);
+
   return (
     <>
       {/* Live region for screen reader announcements */}
-      <div 
+      <div
         ref={announceRef}
-        role="status" 
-        aria-live="polite" 
+        role="status"
+        aria-live="polite"
         aria-atomic="true"
         className="sr-only"
       />
-      
-      <main 
+
+      <main
         id="main-content"
         className="antialiased text-gray-900 bg-gray-50 min-h-screen"
         tabIndex={-1}

@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { SplitTimeline } from "../components/SplitHistory/SplitTimeline";
-import { HistoryFilters, type FiltersState, type SortOption } from "../components/SplitHistory/HistoryFilters";
+import {
+  HistoryFilters,
+  type FiltersState,
+} from "../components/SplitHistory/HistoryFilters";
 import { HistorySummary } from "../components/SplitHistory/HistorySummary";
 import { formatCurrency } from "../utils/format";
 import { apiClient } from "../utils/api-client";
@@ -98,7 +101,7 @@ const MOCK_SPLITS: HistorySplit[] = [
 function useSplitHistory() {
   const [splits, setSplits] = useState<HistorySplit[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -157,7 +160,7 @@ function exportToCSV(rows: HistorySplit[], filename = "split-history.csv") {
 }
 
 function escapeCsv(value: string): string {
-  if (value.includes(",") || value.includes("\n") || value.includes("\"")) {
+  if (value.includes(",") || value.includes("\n") || value.includes('"')) {
     return `"${value.replace(/\"/g, '""')}"`;
   }
   return value;
@@ -176,7 +179,10 @@ export default function SplitHistoryPage() {
 
   const filtered = useMemo(() => {
     const byStatus = splits.filter((s) => filters.statuses.has(s.status));
-    const byRole = filters.role === "all" ? byStatus : byStatus.filter((s) => s.role === filters.role);
+    const byRole =
+      filters.role === "all"
+        ? byStatus
+        : byStatus.filter((s) => s.role === filters.role);
     const search = filters.search.trim().toLowerCase();
     const bySearch = !search
       ? byRole
@@ -248,7 +254,9 @@ export default function SplitHistoryPage() {
               <LoadingSkeleton />
             ) : pageItems.length === 0 ? (
               <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-8 text-center">
-                <p className="text-gray-600 dark:text-gray-300">No splits found</p>
+                <p className="text-gray-600 dark:text-gray-300">
+                  No splits found
+                </p>
               </div>
             ) : (
               <SplitTimeline splits={pageItems} />
