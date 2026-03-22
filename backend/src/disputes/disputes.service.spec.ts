@@ -16,6 +16,7 @@ import { DisputeEvidence } from "../entities/dispute-evidence.entity";
 import { Split } from "../entities/split.entity";
 import { DisputeStateMachine } from "./dispute.state-machine";
 import { DataSource } from "typeorm";
+import { BlockchainClient } from "./blockchain.client";
 
 describe("DisputesService", () => {
   let service: DisputesService;
@@ -79,6 +80,7 @@ describe("DisputesService", () => {
             findAndCount: jest.fn(),
           },
         },
+
         {
           provide: getRepositoryToken(DisputeEvidence),
           useValue: {
@@ -116,6 +118,15 @@ describe("DisputesService", () => {
           provide: EventEmitter2,
           useValue: {
             emit: jest.fn(),
+          },
+        },
+        {
+          provide: BlockchainClient,
+          useValue: {
+            freezeSplit: jest.fn().mockResolvedValue({ txHash: "0xabc123" }),
+            executeResolution: jest
+              .fn()
+              .mockResolvedValue({ txHash: "0xdef456" }),
           },
         },
       ],

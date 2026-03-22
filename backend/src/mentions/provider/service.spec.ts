@@ -1,18 +1,36 @@
-import { SplitCommentService } from '@/split-comments/provider/provider.service';
-import { Test, TestingModule } from '@nestjs/testing';
+import { SplitCommentService } from "@/split-comments/provider/provider.service";
+import { Test, TestingModule } from "@nestjs/testing";
+import { MentionService } from "../provider/service";
+import { EventEmitter2 } from "@nestjs/event-emitter";
+import { getRepositoryToken } from "@nestjs/typeorm";
+import { SplitComment } from "@/split-comments/split-comment.entity";
 
-describe('Service', () => {
+describe("Service", () => {
   let provider: SplitCommentService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [SplitCommentService],
+      providers: [
+        SplitCommentService,
+        {
+          provide: getRepositoryToken(SplitComment),
+          useValue: { find: jest.fn(), save: jest.fn(), findOne: jest.fn() },
+        },
+        {
+          provide: MentionService,
+          useValue: { createMentions: jest.fn() },
+        },
+        {
+          provide: EventEmitter2,
+          useValue: { emit: jest.fn() },
+        },
+      ],
     }).compile();
 
     provider = module.get<SplitCommentService>(SplitCommentService);
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(provider).toBeDefined();
   });
 });
