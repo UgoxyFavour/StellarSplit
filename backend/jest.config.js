@@ -2,6 +2,9 @@ module.exports = {
   moduleFileExtensions: ["js", "json", "ts"],
   rootDir: "src",
   testRegex: ".*\\.(spec|test)\\.ts$",
+  testEnvironment: "node",
+  forceExit: true,
+  openHandlesTimeout: 5000,
   transform: {
     "^.+\\.(t|j)s$": "ts-jest",
   },

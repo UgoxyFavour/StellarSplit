@@ -11,6 +11,8 @@ import {
 } from "../entities/dispute.entity";
 import { DisputeEvidence } from "../entities/dispute-evidence.entity";
 import { Split } from "../entities/split.entity";
+import { Participant } from "@/entities/participant.entity";
+import { Item } from "@/entities/item.entity";
 
 /**
  * Integration tests for Dispute Resolution System
@@ -32,7 +34,7 @@ describe("Dispute Resolution System - Integration Tests", () => {
         TypeOrmModule.forRoot({
           type: "sqlite",
           database: ":memory:",
-          entities: [Dispute, DisputeEvidence, Split],
+          entities: [Dispute, DisputeEvidence, Split, Item, Participant],
           synchronize: true,
           logging: false,
         }),

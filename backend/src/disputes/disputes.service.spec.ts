@@ -18,6 +18,20 @@ import { DisputeStateMachine } from "./dispute.state-machine";
 import { DataSource } from "typeorm";
 import { BlockchainClient } from "./blockchain.client";
 
+const mockQueryRunner = {
+  connect: jest.fn(),
+  startTransaction: jest.fn(),
+  commitTransaction: jest.fn(),
+  rollbackTransaction: jest.fn(),
+  release: jest.fn(),
+  manager: {
+    findOne: jest.fn(),
+    create: jest.fn(),
+    save: jest.fn(),
+    update: jest.fn(),
+  },
+};
+
 describe("DisputesService", () => {
   let service: DisputesService;
   let disputeRepository: any;
@@ -104,6 +118,7 @@ describe("DisputesService", () => {
               startTransaction: jest.fn(),
               commitTransaction: jest.fn(),
               rollbackTransaction: jest.fn(),
+              createQueryRunner: jest.fn().mockReturnValue(mockQueryRunner),
               release: jest.fn(),
               manager: {
                 findOne: jest.fn(),
