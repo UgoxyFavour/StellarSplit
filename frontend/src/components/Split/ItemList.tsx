@@ -19,7 +19,14 @@ export const ItemList = ({ items, currency }: ItemListProps) => {
             <div className="divide-y divide-gray-50">
                 {items.map((item, index) => (
                     <div key={index} className="flex items-center justify-between p-4 bg-white">
-                        <span className="text-gray-700 font-medium">{item.name}</span>
+                        <div>
+                            <span className="text-gray-700 font-medium">{item.name}</span>
+                            {(item.quantity && item.quantity > 1) || item.unitPrice ? (
+                                <p className="text-sm text-gray-500">
+                                    {item.quantity ?? 1} x {formatCurrency(item.unitPrice ?? item.price / (item.quantity ?? 1), currency)}
+                                </p>
+                            ) : null}
+                        </div>
                         <span className="font-bold text-gray-900">
                             {formatCurrency(item.price, currency)}
                         </span>

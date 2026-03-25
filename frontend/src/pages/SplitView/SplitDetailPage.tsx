@@ -3,8 +3,11 @@ import { Share2, ChevronLeft, CheckCircle, AlertCircle } from 'lucide-react';
 import { SplitHeader } from '../../components/Split/SplitHeader';
 import { ParticipantList } from '../../components/Split/ParticipantList';
 import { ItemList } from '../../components/Split/ItemList';
-import { ReceiptImage } from '../../components/Receipt/ReceiptImage';
-import { ReceiptUpload } from '../../components/ReceiptUpload';
+import {
+    ReceiptCaptureFlow,
+    ReceiptImage,
+    type ParsedItem,
+} from '../../components/Receipt';
 import { PaymentButton } from '../../components/Payment/PaymentButton';
 import { PaymentModal } from '../../components/Payment/PaymentModal';
 import { ShareModal } from '../../components/Split/ShareModal';
@@ -169,6 +172,38 @@ export const SplitDetailPage = () => {
         }
     };
 
+    const handleReceiptApply = ({
+        imageUrl,
+        items,
+        receiptTotal,
+    }: {
+        imageUrl?: string;
+        items: ParsedItem[];
+        receiptTotal: number;
+    }) => {
+        setSplit((prev) => ({
+            ...prev,
+            receiptUrl: imageUrl ?? prev.receiptUrl,
+            totalAmount: receiptTotal > 0 ? receiptTotal : prev.totalAmount,
+            items: items.map((item) => ({
+                name: item.name,
+                price: item.quantity * item.price,
+                quantity: item.quantity,
+                unitPrice: item.price,
+                confidence: item.confidence,
+            })),
+        }));
+
+        sendUpdate({
+            type: 'receipt-reviewed',
+            payload: {
+                itemCount: items.length,
+                total: receiptTotal,
+            },
+            userId: 'user-123',
+        });
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 pb-32 md:pb-12">
             {/* Feedback Toast */}
@@ -224,13 +259,14 @@ export const SplitDetailPage = () => {
                         onClick={() => setShowReceiptUpload((v) => !v)}
                         className="text-sm text-purple-600 hover:text-purple-700 font-medium"
                     >
-                        {showReceiptUpload ? 'Hide receipt upload' : 'Upload or replace receipt'}
+                        {showReceiptUpload ? 'Hide receipt review flow' : 'Scan or replace receipt'}
                     </button>
                     {showReceiptUpload && (
-                        <div className="mt-3 p-4 rounded-xl border border-gray-200 bg-white dark:bg-gray-800 dark:border-gray-700">
-                            <ReceiptUpload
-                                onFilesChange={(files) => console.log('Receipt files:', files.length, files)}
-                                onManualEntry={(data) => console.log('Manual entry:', data)}
+                        <div className="mt-3">
+                            <ReceiptCaptureFlow
+                                splitId={split.id}
+                                currency={split.currency}
+                                onApply={handleReceiptApply}
                             />
                         </div>
                     )}

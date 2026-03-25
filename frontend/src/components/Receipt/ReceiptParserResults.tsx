@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CheckCircle, XCircle } from 'lucide-react';
 import {
@@ -9,7 +9,7 @@ import { ReceiptImageViewer } from './ReceiptImageViewer';
 import { TotalReconciliationBanner } from './TotalReconciliationBanner';
 
 interface ReceiptParserResultsProps {
-  imageUrl: string;
+  imageUrl?: string;
   items: ParsedItem[];
   receiptTotal: number;
   currency: string;
@@ -31,6 +31,10 @@ export const ReceiptParserResults = ({
   const [items, setItems] = useState<ParsedItem[]>(initialItems);
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
   const [acceptingLowConfidence, setAcceptingLowConfidence] = useState(false);
+
+  useEffect(() => {
+    setItems(initialItems);
+  }, [initialItems]);
 
   const parsedTotal = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -125,10 +129,21 @@ export const ReceiptParserResults = ({
       <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
         {/* Image Viewer */}
         <div className="min-h-0">
-          <ReceiptImageViewer
-            imageUrl={imageUrl}
-            highlightRegion={highlightRegion}
-          />
+          {imageUrl ? (
+            <ReceiptImageViewer
+              imageUrl={imageUrl}
+              highlightRegion={highlightRegion}
+            />
+          ) : (
+            <div className="flex h-full min-h-[320px] items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center text-gray-500">
+              <div>
+                <p className="font-semibold text-gray-700">No receipt image preview</p>
+                <p className="mt-2 text-sm">
+                  You can still review and correct the parsed line items manually.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Item Editor */}

@@ -10,6 +10,9 @@ export interface Participant {
 export interface Item {
     name: string;
     price: number;
+    quantity?: number;
+    unitPrice?: number;
+    confidence?: number;
 }
 
 export interface Split {

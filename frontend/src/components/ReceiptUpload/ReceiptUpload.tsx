@@ -162,19 +162,18 @@ export function ReceiptUpload({
       const { item } = cropModal;
       if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
       const newUrl = URL.createObjectURL(croppedFile);
-      setItems((prev) =>
-        prev.map((i) =>
+      setItems((prev) => {
+        const next = prev.map((i) =>
           i.id === item.id
             ? { ...i, file: croppedFile, previewUrl: newUrl, error: undefined }
             : i
-        )
-      );
-      onFilesChange?.(
-        items.map((i) => (i.id === item.id ? croppedFile : i.file))
-      );
+        );
+        onFilesChange?.(next.map((previewItem) => previewItem.file));
+        return next;
+      });
       setCropModal(null);
     },
-    [cropModal, items, onFilesChange]
+    [cropModal, onFilesChange]
   );
 
   const handleCropCancel = useCallback(() => {
