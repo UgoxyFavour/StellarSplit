@@ -1,4 +1,12 @@
-import { BadRequestException, CanActivate, ExecutionContext, Injectable, Logger, UnauthorizedException, UseGuards } from "@nestjs/common";
+import {
+  BadRequestException,
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+  UseGuards,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import {
   ConnectedSocket,
@@ -12,6 +20,7 @@ import {
 } from "@nestjs/websockets";
 import { createHmac, timingSafeEqual } from "crypto";
 import { Server, Socket } from "socket.io";
+import { AuthorizationService } from "../auth/services/authorization.service";
 
 export interface WsJwtPayload {
   sub?: string;
@@ -82,7 +91,10 @@ export class WsJwtAuthService {
       throw new UnauthorizedException("Invalid JWT signature");
     }
 
-    if (typeof payload.exp === "number" && payload.exp <= Math.floor(Date.now() / 1000)) {
+    if (
+      typeof payload.exp === "number" &&
+      payload.exp <= Math.floor(Date.now() / 1000)
+    ) {
       throw new UnauthorizedException("JWT token expired");
     }
 
@@ -112,7 +124,10 @@ export class WsJwtAuthService {
 
 @Injectable()
 export class WsJwtAuthGuard implements CanActivate {
-  constructor(private readonly wsJwtAuthService: WsJwtAuthService) {}
+  constructor(
+    private readonly wsJwtAuthService: WsJwtAuthService,
+    private readonly authorizationService: AuthorizationService,
+  ) {}
 
   canActivate(context: ExecutionContext): boolean {
     const client = context.switchToWs().getClient<Socket>();
@@ -136,7 +151,10 @@ export class EventsGateway
 
   private readonly logger = new Logger(EventsGateway.name);
 
-  constructor(private readonly wsJwtAuthService: WsJwtAuthService) {}
+  constructor(
+    private readonly wsJwtAuthService: WsJwtAuthService,
+    private readonly authorizationService: AuthorizationService,
+  ) {}
 
   afterInit(): void {
     this.logger.log("Events gateway initialized");
@@ -159,12 +177,26 @@ export class EventsGateway
 
   @UseGuards(WsJwtAuthGuard)
   @SubscribeMessage("join_split")
-  handleJoinSplit(
+  async handleJoinSplit(
     @ConnectedSocket() client: Socket,
     @MessageBody() payload: { splitId: string },
-  ): { event: string; data: { splitId: string; room: string } } {
+  ): Promise<{ event: string; data: { splitId: string; room: string } }> {
     if (!payload?.splitId) {
       throw new BadRequestException("splitId is required");
+    }
+
+    const userId = (client.data.user as WsJwtPayload)?.sub;
+    if (!userId) {
+      throw new UnauthorizedException("Authenticated user required");
+    }
+
+    const canAccess = await this.authorizationService.canAccessSplit(
+      userId,
+      payload.splitId,
+    );
+
+    if (!canAccess) {
+      throw new UnauthorizedException("Not allowed to join this split");
     }
 
     const room = this.getSplitRoom(payload.splitId);
@@ -188,6 +220,82 @@ export class EventsGateway
 
   emitParticipantJoined(splitId: string, data: Record<string, unknown>): void {
     this.server.to(this.getSplitRoom(splitId)).emit("participant_joined", data);
+  }
+
+  @UseGuards(WsJwtAuthGuard)
+  @SubscribeMessage("leave_split")
+  async handleLeaveSplit(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { splitId: string },
+  ): Promise<{ event: string; data: { splitId: string; room: string } }> {
+    if (!payload?.splitId) {
+      throw new BadRequestException("splitId is required");
+    }
+
+    const room = this.getSplitRoom(payload.splitId);
+    client.leave(room);
+
+    return {
+      event: "left_split",
+      data: {
+        splitId: payload.splitId,
+        room,
+      },
+    };
+  }
+
+  @UseGuards(WsJwtAuthGuard)
+  @SubscribeMessage("split_presence")
+  async handleSplitPresence(
+    @MessageBody() payload: { splitId: string },
+  ): Promise<{
+    event: string;
+    data: { splitId: string; participants: string[] };
+  }> {
+    if (!payload?.splitId) {
+      throw new BadRequestException("splitId is required");
+    }
+
+    const room = this.getSplitRoom(payload.splitId);
+    const roomData = this.server.sockets.adapter.rooms.get(room);
+    const participants = roomData ? Array.from(roomData) : [];
+
+    return {
+      event: "split_presence",
+      data: {
+        splitId: payload.splitId,
+        participants,
+      },
+    };
+  }
+
+  @UseGuards(WsJwtAuthGuard)
+  @SubscribeMessage("split_activity")
+  async handleSplitActivity(
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    payload: { splitId: string; activity: Record<string, unknown> },
+  ): Promise<{
+    event: string;
+    data: { splitId: string; activity: Record<string, unknown> };
+  }> {
+    if (!payload?.splitId || !payload?.activity) {
+      throw new BadRequestException("splitId and activity are required");
+    }
+
+    const room = this.getSplitRoom(payload.splitId);
+    this.server.to(room).emit("split_activity", {
+      splitId: payload.splitId,
+      activity: payload.activity,
+    });
+
+    return {
+      event: "split_activity_broadcast",
+      data: {
+        splitId: payload.splitId,
+        activity: payload.activity,
+      },
+    };
   }
 
   private getSplitRoom(splitId: string): string {
