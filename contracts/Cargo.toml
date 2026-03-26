@@ -4,18 +4,16 @@ resolver = "2"
 members = [
     "achievement-badges",
     "flash-loan",
+    "dispute-resolution",
     "path-payment",
     "split-template",
     "staking",
+    "split-escrow",
+    "multi-sig-splits",
 ]
 # Excluded: these crates have compilation errors and are not yet workspace-ready
 # - dispute-resolution: many compilation errors (mid-port to pinned Soroban toolchain)
-# - split-escrow: many compilation errors (draft/broken source)
-# - multi-sig-splits: E0507 move error (needs ownership fix)
 exclude = [
-    "dispute-resolution",
-    "split-escrow",
-    "multi-sig-splits",
 ]
 
 [workspace.dependencies]

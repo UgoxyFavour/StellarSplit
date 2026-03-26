@@ -33,6 +33,8 @@ pub struct MultisigSplit {
     pub status: MultisigStatus,
     /// List of authorized signers
     pub signers: Vec<Address>,
+    /// List of signers who have actually signed (collected signatures)
+    pub signed_signers: Vec<Address>,
 }
 
 /// Governance information for a multi-signature split

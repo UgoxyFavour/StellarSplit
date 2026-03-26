@@ -123,8 +123,6 @@ impl SplitEscrowContract {
             return Err(Error::InvalidAmount);
         }
 
-        let metadata = Map::new(&env);
-
         let note_stored = match note {
             Some(n) => {
                 validate_note_len(&n)?;
@@ -132,6 +130,13 @@ impl SplitEscrowContract {
             }
             None => String::from_str(&env, ""),
         };
+
+        // This contract currently doesn't accept arbitrary metadata at creation.
+        // Keep the on-chain metadata map empty for now.
+        let metadata = Map::new(&env);
+
+        // Whitelist functionality is supported via add/remove calls, but default is disabled.
+        let whitelist_enabled = false;
 
         let split_id = storage::get_next_split_id(&env);
         storage::bump_next_split_id(&env);

@@ -6,6 +6,13 @@ pub fn emit_initialized(env: &Env, admin: &Address) {
     env.events().publish(("init", "admin"), admin.clone());
 }
 
+pub fn emit_contract_upgraded(env: &Env, old_version: String, new_version: String) {
+    env.events().publish(
+        ("upgraded", "old_version", "new_version"),
+        (old_version, new_version),
+    );
+}
+
 pub fn emit_split_created(env: &Env, split: &Split) {
     env.events().publish(
         ("created", "split_id", "creator"),

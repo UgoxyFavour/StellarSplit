@@ -75,6 +75,7 @@ impl MultisigSplitsContract {
             executed_at: 0,
             status: MultisigStatus::Pending,
             signers: Vec::new(&env),
+            signed_signers: Vec::new(&env),
         };
 
         // Save the split

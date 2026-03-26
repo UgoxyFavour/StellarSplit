@@ -96,7 +96,7 @@ pub fn remove_signer(env: &Env, split_id: &String, signer: &Address) -> Result<(
         return Err(MultisigError::CannotRemoveLastSigner);
     }
 
-    // Find and remove the signer
+    // Find and remove the signer; undo their signature if they had signed.
     let mut found = false;
     let mut new_signers = Vec::new(env);
     for i in 0..split.signers.len() {
